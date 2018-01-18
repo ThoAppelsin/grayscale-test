@@ -1,0 +1,639 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Incremental Shades Test</title>
+    <meta name="description" content="Incremental Shades Test">
+    <meta name="author" content="Utkan Gezer">
+
+    <style>html {
+    -ms-content-zooming: none;
+}
+
+* {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    /*font-size: 9px;*/
+    /*font-weight: bold;*/
+
+    display: flex;
+    cursor: default;
+}
+
+
+#dialogoverlay {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    
+    background-color: rgba(0, 0, 0, 0.75);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 100;
+}
+
+#dialogbox {
+    display: flex;
+    flex-direction: column;
+
+    position: fixed;
+
+    /*min-height: 50%;
+    min-width: 50%;*/
+
+    max-height: 90%;
+    max-width: 90%;
+
+    box-sizing: border-box;
+    padding: 3ex 3em;
+
+    background-color: #FFF;
+    
+    border-radius: 15px;
+}
+
+.dialogoptions {
+    flex-shrink: 1;
+
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    max-width: 1840px;
+
+    position: relative;
+    margin-top: 15px;
+
+    overflow-y: auto;
+}
+
+.dialogoption {
+    display: inline-block;
+    padding: 8px;
+    margin: 2px;
+
+    flex-basis: 0;
+    flex-grow: 1;
+
+    text-align: center;
+
+    box-shadow: inset 0 0 4px rgb(192, 192, 192);
+
+    cursor: pointer;
+}
+
+.dialogoption:hover {
+    background-color: rgba(192, 192, 192, 0.2);
+}
+
+.dialogoption:active {
+    background-color: rgba(192, 192, 192, 0.8);
+}
+
+.dialogoptionselected, .dialogoptionselected:hover {
+    background-color: rgba(192, 192, 192, 0.5);
+}
+
+
+@keyframes shadowglow {
+    0% {
+        text-shadow: 0px 0px 2px rgba(162, 192, 192, 0.1);
+    }
+
+    100% {
+        text-shadow: 0px 0px 4px rgba(162, 192, 192, 0.7);
+    }
+}
+
+.dialogsubmit {
+    flex-grow: 1;
+
+    text-align: center;
+    padding: 15px;
+
+    font-size: 150%;
+
+    color: rgba(192, 192, 192, 0.5);
+
+    transition: color 450ms ease-in;
+}
+
+.dialogsubmitenabled {
+    color: rgba(162, 192, 192, 1);
+
+    cursor: pointer;
+}
+
+.dialogsubmitglowing {
+    text-shadow: 0px 0px 2px rgba(162, 192, 192, 0.1);
+
+    animation-delay: 2s;
+    animation-duration: 2s;
+    animation-name: shadowglow;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    animation-timing-function: linear;
+}
+
+
+#testbody {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+#testbands {
+    position: relative;
+
+    margin: 0 3vw;
+}
+
+.testband {
+    position: relative;
+
+    height: 50vh;
+    width: 100%;
+}
+
+.delim {
+    position: absolute;
+
+    z-index: 5;
+
+    height: 0;
+    left: -0.5vw;
+    right: -2vw;
+
+    margin-top: -0.9vw;
+    margin-left: -1.5vw;
+
+    border-left: 1.5vw solid  rgba(128, 128, 128, 0.3);
+    border-right: 1.5vw solid rgba(128, 128, 128, 0.3);
+    border-top: 0.9vw solid transparent;
+    border-bottom: 0.9vw solid transparent;
+
+    opacity: 0.7;
+
+    cursor: pointer;
+}
+
+.delim:after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+
+    top: -10vh;
+    bottom: -10vh;
+}
+
+.delim:hover {
+    opacity: 0.8;
+}
+
+.delim:active {
+    opacity: 0.9;
+}
+
+.delimselected {
+    border-left-color:  rgb(216, 128, 128);
+    border-right-color: rgb(216, 128, 128);
+}
+
+.falselymissed::before {
+    content: '';
+    position: absolute;
+    left: 0.5vw;
+    right: 0.5vw;
+
+    top: -10vh;
+    bottom: -10vh;
+
+    background: rgb(65, 175, 65);
+}
+
+.falselyhit::before {
+    content: '';
+    position: absolute;
+    left: 0.5vw;
+    right: 0.5vw;
+
+    top: -10vh;
+    bottom: -10vh;
+
+    background: rgb(250, 50, 50);
+}
+
+/*.falselyhit, .falselymissed {
+    opacity: 1;
+}*/
+
+.falselymissed:hover::before, .falselyhit:hover::before {
+    background: transparent;
+}
+
+
+.testcontrolwidth {
+    width: 200px;
+}
+
+@media (orientation: portrait) {
+    .testcontrolwidth {
+        width: 100px;
+    }
+}
+
+#testcontrols {
+    position: fixed;
+
+    top: 0;
+    bottom: 0;
+    right: 0;
+    /* width shall comefrom .testcontrolwidth */
+    margin: inherit;
+
+    display: flex;
+    flex-direction: column;
+
+    font-size: 200%;
+}
+
+#testcontrols > div {
+    flex-basis: 0;
+    flex-grow: 1;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Glow stuff */
+
+#testcontrols > div:nth-child(odd) {
+    background: #5A5A5A;
+    color: #A5A5A5;
+}
+
+#testcontrols > div:nth-child(odd):hover {
+    text-shadow: 0px 0px 2px #A5A5A5;
+}
+
+#testcontrols > div:nth-child(even) {
+    background: #A5A5A5;
+    color: #5A5A5A;
+}
+
+#testcontrols > div:nth-child(even):hover {
+    text-shadow: 0px 0px 2px #5A5A5A;
+}
+
+#testsubmit {
+    font-size: 200%;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.testcontroltext {
+    display: inline-block;
+    text-align: center;
+
+    transition: transform 250ms ease;
+}
+
+@media (orientation: portrait) {
+    .testcontroltext {
+        transform: rotate(-90deg);
+    }
+}</style>
+</head>
+
+<body>
+    <div id="testbody">
+        <div id="testbands">
+            
+        </div>
+    </div>
+    <div id="testcontrolsspacer" class="testcontrolwidth"></div>
+    <div id="testcontrols" class="testcontrolwidth">
+        
+    </div>
+
+    <script>Array.prototype.last = function () {
+    return this[this.length - 1];
+}
+
+function add(a, b) {
+    return a + b;
+}
+
+var dialogoverlay = document.createElement('div');
+dialogoverlay.id = 'dialogoverlay';
+
+var dialogboxtemplate = document.createElement('div');
+dialogboxtemplate.id = 'dialogbox';
+
+var dialogbox = null;
+
+function cleardialog() {
+    if (document.body.contains(dialogoverlay)) {
+        document.body.removeChild(dialogoverlay);
+    }
+}
+
+function makedialog() {
+    // place the overlay if it was not already present
+    if (!document.body.contains(dialogoverlay)) {
+        document.body.appendChild(dialogoverlay);
+    }
+
+    if (dialogbox && dialogoverlay.contains(dialogbox)) {
+        var newdialogbox = dialogboxtemplate.cloneNode(false);
+        dialogoverlay.replaceChild(newdialogbox, dialogbox);
+        dialogbox = newdialogbox;
+    }
+    else {
+        dialogbox = dialogboxtemplate.cloneNode(false);
+        dialogoverlay.appendChild(dialogbox);
+    }
+
+    return dialogbox;
+}
+
+var colordepth = 8;
+var shadelevelmax = (1 << colordepth) - 1;
+
+function shadecount(shadestep) {
+    return Math.floor(shadelevelmax / shadestep) + 1;
+}
+
+function grayshade2csscolor(shade) {
+    return 'rgb(' + Array(3).fill(shade.toString()).join() + ')';
+}
+
+function preparetest(shadestep) {
+    var shcount = shadecount(shadestep);
+
+    /*
+    Here on, we shall prepare the testcontrols.
+    */
+
+    var testcontrols = document.getElementById('testcontrols');
+
+    // Test progress
+    var testprogress = document.createElement('div');
+    testprogress.id = 'testprogress';
+
+    var testprogresstext = document.createElement('div');
+    testprogresstext.className = 'testcontroltext';
+
+    function updatetestprogresstext(delimsselected) {
+        testprogresstext.innerHTML = `${delimsselected}&nbsp;/&nbsp;${shcount - 1} splits`;
+    }
+    updatetestprogresstext(0);
+
+    testprogress.appendChild(testprogresstext);
+
+    // Append test controls
+    testcontrols.appendChild(testprogress);
+
+    /*
+    Here on, we shall prepare the testbands.
+    */
+
+    var testbands = document.getElementById('testbands');
+
+    var shadespan = (shcount - 1) * shadestep;
+    var minshade = Math.floor((shadelevelmax - shadespan) / 2);
+
+    var band = document.createElement('div');
+    band.className = 'testband';
+
+    function makeband(shade) {
+        var aband = band.cloneNode(false);
+        aband.style['background-color'] = grayshade2csscolor(shade);
+        testbands.appendChild(aband);
+    }
+
+    var falsedelims = Array();
+    var truedelims = Array();
+
+    function makedelim(delimindeed, shadebelow) {
+        function delimonclicked(event) {
+            var adelim = event.currentTarget;
+            adelim.selected = !adelim.selected;
+            adelim.classList.toggle('delimselected');
+
+            updatetestprogresstext(document.getElementsByClassName('delimselected').length);
+        }
+
+        var delim = document.createElement('div');
+        delim.className = 'delim';
+        delim.selected = false;
+        delim.onclick = delimonclicked;
+
+        testbands.appendChild(delim);
+
+        if (delimindeed) {
+            truedelims.push(delim);
+        }
+        else {
+            // delim.click();
+            falsedelims.push(delim);
+        }
+    }
+
+    var shade = minshade;
+    makeband(shade);
+
+    while (true) {
+        delimindeed = Math.random() < 0.5;
+        if (delimindeed) shade += shadestep;
+
+        if (shade > shadelevelmax) break;
+
+        makedelim(delimindeed, shade);
+        makeband(shade);
+    }
+
+    function evaluatetest() {
+        var hitcount = truedelims.map(function (delim) {
+            return delim.selected ? 1 : 0;
+        }).reduce(add, 0);
+        var avoidcount = falsedelims.map(function (delim) {
+            return !delim.selected ? 1 : 0;
+        }).reduce(add, 0);
+
+        var hitrate = hitcount / truedelims.length;
+        var avoidrate = avoidcount / falsedelims.length;
+
+        var hitratedisplay = document.createElement('div');
+        var avoidratedisplay = document.createElement('div');
+
+        var hitratedisplaytext = document.createElement('div');
+        var avoidratedisplaytext = document.createElement('div');
+
+        hitratedisplaytext.className = 'testcontroltext';
+        avoidratedisplaytext.className = 'testcontroltext';
+
+        hitratedisplaytext.innerHTML = `${hitcount}&nbsp;/&nbsp;${truedelims.length} hit`;
+        avoidratedisplaytext.innerHTML = `${avoidcount}&nbsp;/&nbsp;${falsedelims.length} avoided`;
+
+        hitratedisplay.appendChild(hitratedisplaytext);
+        avoidratedisplay.appendChild(avoidratedisplaytext);
+
+        // Empty out the testcontrols
+        var elementchild;
+        while (elementchild = testcontrols.firstElementChild) {
+            testcontrols.removeChild(elementchild);
+        }
+
+        testcontrols.appendChild(hitratedisplay);
+        testcontrols.appendChild(avoidratedisplay);
+
+        truedelims.forEach(function (delim) {
+            if (!delim.selected) {
+                delim.classList.add('falselymissed');
+            }
+
+            delim.onclick = null;
+        });
+
+        falsedelims.forEach(function (delim) {
+            if (delim.selected) {
+                delim.classList.add('falselyhit');
+            }
+
+            delim.onclick = null;
+        });
+    }
+
+    /*
+    Here on, we shall continue preparing the testcontrols.
+    */
+
+    // Test submit
+    var testsubmit = document.createElement('div');
+    testsubmit.id = 'testsubmit';
+
+    var testsubmittext = document.createElement('div');
+    testsubmittext.className = 'testcontroltext';
+
+    testsubmittext.innerHTML = 'OK!';
+    testsubmit.appendChild(testsubmittext);
+
+    testsubmit.onclick = function (event) {
+
+        var dialogbox = makedialog();
+
+        // dialogbox question
+
+        var question = document.createTextNode('Are you sure that you\'re done?');
+
+        // dialogbox confirm
+
+        var confirm = document.createElement('div');
+        confirm.className = 'dialogsubmit dialogsubmitenabled';
+        confirm.onclick = function (event) {
+            cleardialog();
+            evaluatetest();
+        };
+        confirm.innerHTML = 'Yes';
+
+        // dialogbox deny
+
+        var deny = document.createElement('div');
+        deny.className = 'dialogsubmit dialogsubmitenabled';
+        deny.onclick = function (event) {
+            cleardialog();
+        };
+        deny.innerHTML = 'Let me rethink';
+
+
+        // populate dialogbox
+
+        dialogbox.appendChild(question);
+        dialogbox.appendChild(confirm);
+        dialogbox.appendChild(deny);
+    }
+
+    // Append test controls
+    testcontrols.appendChild(testsubmit);
+}
+
+function askfordifficulty() {
+
+    var dialogbox = makedialog();
+
+    // dialogbox question
+
+    var question = document.createTextNode('How hard would you like to have your test?');
+
+    // dialogbox options
+
+    var options = document.createElement('div');
+    options.className = 'dialogoptions';
+
+    var optiontemplate = document.createElement('div');
+    optiontemplate.className = 'dialogoption';
+    dialogbox.option = null;
+
+    for (var shadestep = 1; shadestep < 21; shadestep++) {
+        var option = optiontemplate.cloneNode(false);
+        
+        option.innerHTML = `${shadestep}&nbsp;increment (${shadecount(shadestep)}&nbsp;shades)`;
+        option.shadestep = shadestep;
+
+        option.onclick = function (event) {
+            if (dialogbox.option) {
+                dialogbox.option.classList.remove('dialogoptionselected');
+            }
+
+            event.currentTarget.classList.add('dialogoptionselected');
+            dialogbox.option = event.currentTarget;
+
+            submit.classList.add('dialogsubmitenabled', 'dialogsubmitglowing');
+        };
+
+        options.appendChild(option);
+    }
+
+    // dialogbox submit
+
+    var submit = document.createElement('div');
+    submit.className = 'dialogsubmit';
+    submit.onclick = function (event) {
+        if (event.currentTarget.classList.contains('dialogsubmitenabled')) {
+            var shadestep = dialogbox.option.shadestep;
+
+            cleardialog();
+            preparetest(shadestep);
+        }
+    };
+    submit.innerHTML = 'Continue';
+
+    // populate dialogbox
+
+    dialogbox.appendChild(question);
+    dialogbox.appendChild(options);
+    dialogbox.appendChild(submit);
+}
+
+function main() {
+    askfordifficulty();
+}
+
+document.body.onload = main;</script>
+</body>
+</html>
